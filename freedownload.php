@@ -1,35 +1,50 @@
 <?php
 /**
- * Plugin Name: Free Download Templates
- * Description: A WordPress plugin to offer downloadable free templates.
- * Version: 1.0
- * Author: aipl-ai
+ * Plugin Name: FreeDownload
+ * Plugin URI: https://github.com/aipl-ai/freedownload
+ * Description: Display downloadable free templates with gated forms and customizable grid layout
+ * Version: 1.0.0
+ * Author: AIPL AI
+ * License: GPL v2 or later
+ * Text Domain: freedownload
+ * Domain Path: /languages
  */
 
-// Ensure WordPress is loaded
+// Exit if accessed directly
 if ( ! defined( 'ABSPATH' ) ) {
-    exit; // Exit if accessed directly
+    exit;
 }
 
-function fd_download_template($template_name) {
-    // Logic to handle the download of the template
-    if ( ! empty( $template_name ) ) {
-        $file_path = plugin_dir_path( __FILE__ ) . 'templates/' . $template_name;
-        if ( file_exists( $file_path ) ) {
-            header('Content-Description: File Transfer');
-            header('Content-Type: application/octet-stream');
-            header('Content-Disposition: attachment; filename=' . basename($file_path));
-            header('Expires: 0');
-            header('Cache-Control: must-revalidate');
-            header('Pragma: public');
-            header('Content-Length: ' . filesize($file_path));
-            flush();
-            readfile($file_path);
-            exit;
-        }
-    }
+// Define plugin constants
+define( 'FREEDOWNLOAD_VERSION', '1.0.0' );
+define( 'FREEDOWNLOAD_PATH', plugin_dir_path( __FILE__ ) );
+define( 'FREEDOWNLOAD_URL', plugin_dir_url( __FILE__ ) );
+define( 'FREEDOWNLOAD_BASENAME', plugin_basename( __FILE__ ) );
+
+// Include core plugin files
+require_once FREEDOWNLOAD_PATH . 'includes/class-freedownload.php';
+require_once FREEDOWNLOAD_PATH . 'includes/class-cpt.php';
+require_once FREEDOWNLOAD_PATH . 'includes/class-admin.php';
+require_once FREEDOWNLOAD_PATH . 'includes/class-frontend.php';
+
+/**
+ * Initialize the plugin
+ */
+function freedownload_init() {
+    FreeDownload::get_instance();
+}
+add_action( 'plugins_loaded', 'freedownload_init' );
+
+// Activation and deactivation hooks
+register_activation_hook( __FILE__, 'freedownload_activate' );
+register_deactivation_hook( __FILE__, 'freedownload_deactivate' );
+
+function freedownload_activate() {
+    // Create custom post type on activation
+    FreeDownload_CPT::register_post_type();
+    flush_rewrite_rules();
 }
 
-// Example usage: add a hook or shortcode to trigger the download
-// add_action('init', 'fd_download_template');
-?>
+function freedownload_deactivate() {
+    flush_rewrite_rules();
+}
